@@ -1,6 +1,5 @@
 package com.clinica.dto;
 
-import com.clinica.service.DoctorService;
 import lombok.Data;
 
 @Data

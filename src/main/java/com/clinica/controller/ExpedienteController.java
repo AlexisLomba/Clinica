@@ -1,38 +1,46 @@
 package com.clinica.controller;
 
 import com.clinica.dto.ExpedienteDto;
-import com.clinica.model.Expediente;
-import com.clinica.repository.ExpedienteRepository;
-import com.clinica.repository.PacienteRespository;
 import com.clinica.service.ExpedienteService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/expediente")
+@RequestMapping("/api/expedientes")
 public class ExpedienteController {
 
-    @Autowired
-    private ExpedienteRepository expedienteRepository;
+    private final ExpedienteService expedienteService;
 
-    @Autowired
-    private ExpedienteService expedienteService;
+    public ExpedienteController(ExpedienteService expedienteService) {
+        this.expedienteService = expedienteService;
+    }
 
     @GetMapping
-    public List<Expediente> findAllExpediente(){
-        return expedienteRepository.findAll();
+    public ResponseEntity<List<ExpedienteDto>> findAllExpedientes() {
+        return ResponseEntity.ok(expedienteService.findAllExpedientes());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ExpedienteDto> findExpedienteById(@PathVariable Long id) {
+        return ResponseEntity.ok(expedienteService.findById(id));
     }
 
     @PostMapping
-    public ResponseEntity<ExpedienteDto> createExpediente(@RequestBody ExpedienteDto expedienteDto){
-        return ResponseEntity.ok(expedienteService.crearExpediente(expedienteDto));
+    public ResponseEntity<ExpedienteDto> createExpediente(@RequestBody ExpedienteDto expedienteDto) {
+        return new ResponseEntity<>(expedienteService.crearExpediente(expedienteDto), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ExpedienteDto> updateExpediente(@PathVariable Long id, @RequestBody ExpedienteDto expedienteDto) {
+        return ResponseEntity.ok(expedienteService.actualizarExpediente(id, expedienteDto));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteExpediente(@PathVariable Long id){
-        expedienteRepository.deleteById(id);
+    public ResponseEntity<Void> deleteExpediente(@PathVariable Long id) {
+        expedienteService.eliminarExpediente(id);
+        return ResponseEntity.noContent().build();
     }
 }

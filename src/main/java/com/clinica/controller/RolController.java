@@ -1,31 +1,51 @@
 package com.clinica.controller;
 
-import com.clinica.model.Rol;
-import com.clinica.repository.RolRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.clinica.dto.RolDto;
+import com.clinica.service.RolService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@RequestMapping("/rol")
 @RestController
+@RequestMapping("/api/roles")
 public class RolController {
 
-    @Autowired
-    private RolRepository rolRepository;
+    private final RolService rolService;
+
+    public RolController(RolService rolService) {
+        this.rolService = rolService;
+    }
 
     @GetMapping
-    public List<String> findAllRolNames() {
-        return rolRepository.findAll().stream()
-                .map(Rol::getNombre) // Devuelve solo los nombres de los roles
-                .collect(Collectors.toList());
+    public ResponseEntity<List<RolDto>> findAllRoles() {
+        return ResponseEntity.ok(rolService.findAllRoles());
+    }
+
+    @GetMapping("/nombres")
+    public ResponseEntity<List<String>> findAllRolNames() {
+        return ResponseEntity.ok(rolService.findAllRolNames());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RolDto> findRolById(@PathVariable Long id) {
+        return ResponseEntity.ok(rolService.findById(id));
     }
 
     @PostMapping
-    public Rol addRol(@RequestBody Rol rol) {
-        rolRepository.save(rol);
-        return rol;
+    public ResponseEntity<RolDto> createRol(@RequestBody RolDto rolDto) {
+        return new ResponseEntity<>(rolService.crearRol(rolDto), HttpStatus.CREATED);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<RolDto> updateRol(@PathVariable Long id, @RequestBody RolDto rolDto) {
+        return ResponseEntity.ok(rolService.actualizarRol(id, rolDto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRol(@PathVariable Long id) {
+        rolService.eliminarRol(id);
+        return ResponseEntity.noContent().build();
+    }
 }

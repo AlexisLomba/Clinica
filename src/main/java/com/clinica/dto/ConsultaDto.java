@@ -1,9 +1,17 @@
 package com.clinica.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ConsultaDto {
     private Long id;
     private Long citaId; // Referencia a la cita (opcional)
@@ -15,5 +23,6 @@ public class ConsultaDto {
     private String tratamiento;
     private String notas;
     private Long expedienteId; // Referencia al expediente
+    private List<RecetaDto> recetas;
 }
 

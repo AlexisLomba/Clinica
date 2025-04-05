@@ -5,7 +5,7 @@ import com.clinica.model.Antecedente;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-@Mapper
+@Mapper(componentModel = "spring")
 public interface AntecedenteMapper {
 
     AntecedenteMapper INSTANCE = Mappers.getMapper(AntecedenteMapper.class);

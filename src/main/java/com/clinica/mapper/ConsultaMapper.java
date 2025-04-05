@@ -5,8 +5,9 @@ import com.clinica.model.Consulta;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Service;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface ConsultaMapper {
 
     ConsultaMapper INSTANCE = Mappers.getMapper(ConsultaMapper.class);

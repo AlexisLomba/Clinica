@@ -5,8 +5,9 @@ import com.clinica.model.Expediente;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Service;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface ExpedienteMapper {
 
     ExpedienteMapper INSTANCE = Mappers.getMapper(ExpedienteMapper.class);
