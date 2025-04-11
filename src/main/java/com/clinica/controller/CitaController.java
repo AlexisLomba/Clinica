@@ -1,7 +1,7 @@
 package com.clinica.controller;
 
 import com.clinica.dto.CitaDto;
-import com.clinica.service.CitaService;
+import com.clinica.service.ICitaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,38 +9,38 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/citas")
+@RequestMapping("/citas")
 public class CitaController {
 
-    private final CitaService citaService;
+    private final ICitaService ICitaService;
 
-    public CitaController(CitaService citaService) {
-        this.citaService = citaService;
+    public CitaController(ICitaService ICitaService) {
+        this.ICitaService = ICitaService;
     }
 
     @GetMapping
     public ResponseEntity<List<CitaDto>> findAllCitas() {
-        return ResponseEntity.ok(citaService.findAll());
+        return ResponseEntity.ok(ICitaService.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CitaDto> findCitaById(@PathVariable Long id) {
-        return ResponseEntity.ok(citaService.findById(id));
+        return ResponseEntity.ok(ICitaService.findById(id));
     }
 
     @PostMapping
     public ResponseEntity<CitaDto> createCita(@RequestBody CitaDto citaDto) {
-        return new ResponseEntity<>(citaService.crearCita(citaDto), HttpStatus.CREATED);
+        return new ResponseEntity<>(ICitaService.crearCita(citaDto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CitaDto> updateCita(@PathVariable Long id, @RequestBody CitaDto citaDto) {
-        return ResponseEntity.ok(citaService.updateCita(id, citaDto));
+        return ResponseEntity.ok(ICitaService.updateCita(id, citaDto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCita(@PathVariable Long id) {
-        citaService.deleteCita(id);
+        ICitaService.deleteCita(id);
         return ResponseEntity.noContent().build();
     }
 }
