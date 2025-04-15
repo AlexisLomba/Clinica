@@ -6,7 +6,6 @@ import com.clinica.model.*;
 import com.clinica.repository.*;
 import com.clinica.service.IConsultaService;
 import com.clinica.service.IVerificarService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

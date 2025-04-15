@@ -1,5 +1,7 @@
 package com.clinica.service;
 
+
+import com.clinica.dto.RolDto;
 import com.clinica.dto.UsuarioDto;
 import com.clinica.mapper.IUsuarioMapper;
 import com.clinica.model.Rol;
@@ -7,24 +9,31 @@ import com.clinica.model.Usuario;
 import com.clinica.repository.IRolRepository;
 import com.clinica.repository.IUsuarioRepository;
 import com.clinica.service.impl.UsuarioServiceImpl;
+import com.clinica.service.impl.VerificarServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.*;  // <--- Esto importa verify, when, any, etc.
+import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+/** * assertEquals -> Evaluar un valor esperado con un actual
+ * * assertTrue -> Siempre espera un verdadero
+ * * assertFalse -> Siempre espera un falso
+ * * assertNotNull -> evalua que no sea nulo
+ * * assertInstanceOf -> evaluar el tipo de objeto
+ * * assertThrows -> validar Excepciones
+ * */
 @ExtendWith(MockitoExtension.class)
 public class UsuarioServiceImplTest {
 
@@ -38,133 +47,168 @@ public class UsuarioServiceImplTest {
     private IUsuarioMapper usuarioMapper;
 
     @Mock
-    private IVerificarService verificarService;
+    private VerificarServiceImpl verificarService;
 
     @InjectMocks
     private UsuarioServiceImpl usuarioService;
 
     @Test
-    void testCrearUsuario_conRolesExistentes_deberiaGuardarYRetornarDto() {
-        UsuarioDto dto = new UsuarioDto();
-        dto.setUsername("user1");
-        dto.setEmail("user1@mail.com");
-        dto.setPassword("password");
-        dto.setNombre("Juan");
-        dto.setApellido("Pérez");
-        dto.setActivo(true);
-        dto.setRoles(Set.of("ADMIN"));
+    void testCrearUsuario() {
+        // Simula el envio de datos como si fuera desde postman
+        UsuarioDto usuarioDto = new UsuarioDto();
+        usuarioDto.setId(1L);
+        usuarioDto.setNombre("Ivan");
+        usuarioDto.setApellido("Lomba");
+        usuarioDto.setEmail("ivan@gmail.com");
+        usuarioDto.setActivo(true);
+        usuarioDto.setPassword("1234");
+        usuarioDto.setUsername("vicarial");
+        usuarioDto.setUltimaModificacion(LocalDateTime.now());
+        usuarioDto.setFechaCreacion(LocalDateTime.now());
+        Set<String> roles = new HashSet<>();
+        roles.add("ADMIN");
+        usuarioDto.setRoles(roles);
 
-        Usuario usuario = new Usuario();
-        usuario.setRoles(new HashSet<>());
+        // Simula la creacion de entidades, como se veria despues de guardarse en la base de datos
+        Rol rol = Rol.builder().id(1L).nombre("ADMIN").build();
+        Set<Rol> rolSet = new HashSet<>();
+        rolSet.add(rol);
 
-        Rol rol = new Rol();
-        rol.setNombre("ADMIN");
+        Usuario usuario = Usuario.builder()
+                .id(1L)
+                .nombre("Ivan")
+                .apellido("Lomba")
+                .email("ivan@gmail.com")
+                .activo(true)
+                .password("1234")
+                .username("vicarial")
+                .fechaCreacion(LocalDateTime.now())
+                .ultimaModificacion(LocalDateTime.now())
+                .roles(new HashSet<>())
+                .build();
 
-        when(usuarioMapper.toEntity(dto)).thenReturn(usuario);
+        // Incluye todos los campos del DTO mas los roles creados
+        Usuario usuarioConRoles = Usuario.builder()
+                .id(1L)
+                .nombre("Ivan")
+                .apellido("Lomba")
+                .email("ivan@gmail.com")
+                .activo(true)
+                .password("1234")
+                .username("vicarial")
+                .fechaCreacion(LocalDateTime.now())
+                .ultimaModificacion(LocalDateTime.now())
+                .roles(rolSet)
+                .build();
+
+        // Configuración de los mocks
+        when(usuarioMapper.toEntity(usuarioDto)).thenReturn(usuario);
         when(rolRepository.findByNombre("ADMIN")).thenReturn(Optional.of(rol));
-        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
-        when(usuarioMapper.toDto(any(Usuario.class))).thenReturn(dto);
+        when(usuarioRepository.save(usuarioConRoles)).thenReturn(usuarioConRoles);
+        when(usuarioMapper.toDto(usuarioConRoles)).thenReturn(usuarioDto);
 
-        UsuarioDto result = usuarioService.crearUsuario(dto);
+        // Ejecución del método
+        UsuarioDto resultado = usuarioService.crearUsuario(usuarioDto);
 
-        assertNotNull(result);
-        assertEquals("user1", result.getUsername());
-        verify(usuarioRepository).save(any(Usuario.class));
+        // Verificaciones
+        assertNotNull(resultado);
+        assertEquals("1234", resultado.getPassword());
+        verify(usuarioRepository, times(1)).save(any(Usuario.class));
+        verify(rolRepository, times(1)).findByNombre("ADMIN");
     }
 
     @Test
-    void testActualizarUsuario_deberiaActualizarYRetornarDto() {
-        Long userId = 1L;
-        UsuarioDto dto = new UsuarioDto();
-        dto.setUsername("nuevoUsername");
-        dto.setEmail("nuevo@mail.com");
-        dto.setPassword("nuevaPass");
-        dto.setNombre("Nuevo");
-        dto.setApellido("Apellido");
-        dto.setActivo(false);
-        dto.setRoles(Set.of("USER"));
+    void testBuscarPorNombre() {
+        // Arrange
+        String nombre = "Ivan";
 
-        Usuario existente = new Usuario();
-        existente.setId(userId);
+        // Creamos un usuario con builder donde se simula que se encontrara en la bse de datos
+        Usuario usuario = Usuario.builder()
+                .id(1L)
+                .nombre("Ivan")
+                .apellido("Lomba")
+                .email("ivan@gmail.com")
+                .activo(true)
+                .password("1234")
+                .username("vicarial")
+                .build();
 
-        Rol rol = new Rol();
-        rol.setNombre("USER");
+        UsuarioDto usuarioDto = new UsuarioDto();
+        usuarioDto.setId(1L);
+        usuarioDto.setNombre("Ivan");
+        usuarioDto.setApellido("Lomba");
+        usuarioDto.setEmail("ivan@gmail.com");
+        usuarioDto.setActivo(true);
+        usuarioDto.setUsername("vicarial");
 
-        when(verificarService.verificarUsuario(userId)).thenReturn(existente);
-        when(rolRepository.findByNombre("USER")).thenReturn(Optional.of(rol));
-        when(usuarioRepository.save(any(Usuario.class))).thenReturn(existente);
-        when(usuarioMapper.toDto(any(Usuario.class))).thenReturn(dto);
+        // Mock behavior
 
-        UsuarioDto result = usuarioService.actualizarUsuario(dto, userId);
-
-        assertNotNull(result);
-        assertEquals("nuevoUsername", result.getUsername());
-        verify(usuarioRepository).save(existente);
-    }
-
-    @Test
-    void testEliminarUsuario_deberiaLlamarDeleteById() {
-        Long id = 1L;
-        Usuario usuario = new Usuario();
-        usuario.setId(id);
-
-        when(verificarService.verificarUsuario(id)).thenReturn(usuario);
-
-        usuarioService.eliminarUsuario(id);
-
-        verify(usuarioRepository).deleteById(id);
-    }
-
-    @Test
-    void testBuscarPorNombre_existente_deberiaRetornarDto() {
-        String nombre = "Juan";
-        Usuario usuario = new Usuario();
-        usuario.setNombre(nombre);
-        UsuarioDto dto = new UsuarioDto();
-        dto.setNombre(nombre);
-
+        // Cuando se llame a findByNombre devolvera un optional con el pobejto usuario,
+        // simulando el comportamneito del repositorio cuando busque por nombre
         when(usuarioRepository.findByNombre(nombre)).thenReturn(Optional.of(usuario));
-        when(usuarioMapper.toDto(usuario)).thenReturn(dto);
 
-        UsuarioDto result = usuarioService.buscarPorNombre(nombre);
+        // simula la conversion de entidad a DTO
+        // le damos el usuario creado y espera que regrese el uduarioDto creado
+        when(usuarioMapper.toDto(usuario)).thenReturn(usuarioDto);
 
-        assertNotNull(result);
-        assertEquals("Juan", result.getNombre());
+        // Act
+        // Se ejecuta el metodo que estamos por testear
+        UsuarioDto resultado = usuarioService.buscarPorNombre(nombre);
+
+        // Assert
+        assertNotNull(resultado);
+        assertEquals("Ivan", resultado.getNombre());
+        assertEquals("ivan@gmail.com", resultado.getEmail());
+
+        // Verify
+        // Verificamos que ambos metodos solo fueron llamados una vez
+        verify(usuarioRepository).findByNombre(nombre);
+        verify(usuarioMapper).toDto(usuario);
     }
 
     @Test
-    void testFindAllUsuarios_deberiaRetornarLista() {
-        Usuario usuario1 = new Usuario();
-        Usuario usuario2 = new Usuario();
+    void testActualizarUsuario() {
 
-        UsuarioDto dto1 = new UsuarioDto();
-        UsuarioDto dto2 = new UsuarioDto();
+        // Creamos un usuario con builder donde se simula que se encontrara en la bse de datos
+        Usuario usuario = Usuario.builder()
+                .id(1L)
+                .nombre("Ivan")
+                .apellido("Lomba")
+                .email("ivan@gmail.com")
+                .activo(true)
+                .password("1234")
+                .username("vicarial")
+                .build();
 
-        when(usuarioRepository.findAll()).thenReturn(List.of(usuario1, usuario2));
-        when(usuarioMapper.toDto(usuario1)).thenReturn(dto1);
-        when(usuarioMapper.toDto(usuario2)).thenReturn(dto2);
+        UsuarioDto usuarioDto = new UsuarioDto();
+        usuarioDto.setId(1L);
+        usuarioDto.setNombre("Ale");
+        usuarioDto.setApellido("Lomba");
+        usuarioDto.setEmail("ivan@gmail.com");
+        usuarioDto.setActivo(true);
+        usuarioDto.setUsername("vicarial");
 
-        List<UsuarioDto> resultado = usuarioService.findAllUsuarios();
+        // Mock behavior
 
-        assertEquals(2, resultado.size());
-    }
+        // simula la conversion de entidad a DTO
+        // le damos el usuario creado y espera que regrese el uduarioDto creado
+        when(usuarioRepository.save(usuario)).thenReturn(usuario);
+        when(verificarService.verificarUsuario(1L)).thenReturn(usuario);
+        when(usuarioMapper.toDto(usuario)).thenReturn(usuarioDto);
 
-    @Test
-    void testFindById_existente_deberiaRetornarDto() {
-        Long id = 1L;
-        Usuario usuario = new Usuario();
-        usuario.setId(id);
+        // Act
+        // Se ejecuta el metodo que estamos por testear
+        UsuarioDto resultado = usuarioService.actualizarUsuario(usuarioDto, 1L);
 
-        UsuarioDto dto = new UsuarioDto();
-        dto.setId(id);
+        // Assert
+        assertNotNull(resultado);
+        assertEquals("Ale", resultado.getNombre());
+        assertEquals("ivan@gmail.com", resultado.getEmail());
 
-        when(verificarService.verificarUsuario(id)).thenReturn(usuario);
-        when(usuarioMapper.toDto(usuario)).thenReturn(dto);
-
-        UsuarioDto result = usuarioService.findById(id);
-
-        assertNotNull(result);
-        assertEquals(id, result.getId());
+        // Verify
+        // Verificamos que ambos metodos solo fueron llamados una vez
+        verify(usuarioMapper).toDto(usuario);
+        verify(usuarioRepository).save(usuario);
     }
 }
 

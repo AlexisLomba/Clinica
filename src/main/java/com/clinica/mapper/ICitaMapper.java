@@ -2,6 +2,10 @@ package com.clinica.mapper;
 
 import com.clinica.dto.CitaDto;
 import com.clinica.model.Cita;
+import com.clinica.model.Doctor;
+import com.clinica.model.Paciente;
+
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -23,4 +27,14 @@ public interface ICitaMapper {
     @Mapping(target = "paciente", ignore = true)
     @Mapping(target = "ultimaModificacion", ignore = true)
     void updateEntityFromDto(CitaDto dto, @MappingTarget Cita cita);
+    
+    @AfterMapping
+    default void mapEntities(@MappingTarget Cita cita, CitaDto dto) {
+        if (dto.getPacienteId() != null) {
+            cita.setPaciente(Paciente.builder().id(dto.getPacienteId()).build());
+        }
+        if (dto.getDoctorId() != null) {
+            cita.setDoctor(Doctor.builder().id(dto.getDoctorId()).build());
+        }
+    } 
 }

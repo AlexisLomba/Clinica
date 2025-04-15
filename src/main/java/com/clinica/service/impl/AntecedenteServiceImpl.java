@@ -39,7 +39,7 @@ public class AntecedenteServiceImpl implements IAntecedenteService {
     @Override
     public AntecedenteDto crearAntecedente(AntecedenteDto antecedenteDto){
 
-        Antecedente antecedente = antecedenteMapper.ToEntity(antecedenteDto);
+        Antecedente antecedente = antecedenteMapper.toEntity(antecedenteDto);
         antecedente.setExpediente(verificarService.verificarExpediente(antecedenteDto.getExpedienteId()));
         antecedente.setTipo(Antecedente.TipoAntecedente.valueOf(antecedenteDto.getTipo().toUpperCase()));
         antecedente.setDescripcion(antecedenteDto.getDescripcion());

@@ -52,8 +52,12 @@ public class UsuarioServiceImpl implements IUsuarioService {
             }
         }
 
-        usuario.setFechaCreacion(LocalDateTime.now());
-        usuario.setUltimaModificacion(LocalDateTime.now());
+        if (usuario.getFechaCreacion() == null) {
+            usuario.setFechaCreacion(LocalDateTime.now());
+        }
+        if (usuario.getUltimaModificacion() == null) {
+            usuario.setUltimaModificacion(LocalDateTime.now());
+        }
 
         Usuario usuarioGuardado = IUsuarioRepository.save(usuario);
         return IUsuarioMapper.toDto(usuarioGuardado);

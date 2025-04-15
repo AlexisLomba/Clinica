@@ -9,35 +9,36 @@ import org.mapstruct.factory.Mappers;
 
 import org.mapstruct.Mapping;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {IRolMapper.class})
 public interface IUsuarioMapper {
 
+    @Mapping(source = "activo", target = "activo")
     @Mapping(source = "roles", target = "roles", qualifiedByName = "mapRolesToStrings")
     UsuarioDto toDto(Usuario usuario);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "fechaCreacion", ignore = true)
+    @Mapping(target = "ultimaModificacion", ignore = true)
     @Mapping(source = "roles", target = "roles", qualifiedByName = "mapStringsToRoles")
     Usuario toEntity(UsuarioDto usuarioDto);
 
+    // Actualización para manejar nulls más seguro
     @Named("mapRolesToStrings")
     default Set<String> mapRolesToStrings(Set<Rol> roles) {
-        if (roles == null) {
-            return null;
-        }
-        return roles.stream()
+        return roles == null ? null : roles.stream()
                 .map(Rol::getNombre)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
 
     @Named("mapStringsToRoles")
     default Set<Rol> mapStringsToRoles(Set<String> roleNames) {
-        if (roleNames == null) {
-            return null;
-        }
-        return roleNames.stream()
+        return roleNames == null ? null : roleNames.stream()
+                .filter(Objects::nonNull)
                 .map(name -> Rol.builder().nombre(name).build())
                 .collect(Collectors.toSet());
     }
