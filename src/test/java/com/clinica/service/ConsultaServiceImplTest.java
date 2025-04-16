@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Test unitarios para ConsultaServiceImpl")
-public class ConsultaServiceImplTest {
+class ConsultaServiceImplTest {
 
     @Mock
     private IConsultaMapper consultaMapper;
@@ -69,6 +69,42 @@ public class ConsultaServiceImplTest {
         consultaDto.setExpedienteId(1L);
         consultaDto.setRecetas(List.of(mock(RecetaDto.class)));
         return consultaDto;
+    }
+
+    @Test
+    void testObtenerTodasLasConsultas(){
+        Consulta consulta = crearConsultaMock();
+        ConsultaDto consultaDto = crearConsultaDtoMock();
+
+        List<Consulta> list = List.of(consulta);
+
+        when(consultaRepository.findAll()).thenReturn(list);
+        when(consultaMapper.toDto(consulta)).thenReturn(consultaDto);
+
+        List<ConsultaDto> resultado = consultaService.obtenerTodasLasConsultas();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+
+        verify(consultaMapper, times(1)).toDto(consulta);
+        verify(consultaRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testObtenerConsultaPorId(){
+        Consulta consulta = crearConsultaMock();
+        ConsultaDto consultaDto = crearConsultaDtoMock();
+
+        when(consultaMapper.toDto(consulta)).thenReturn(consultaDto);
+        when(verificarService.verificarConsulta(1L)).thenReturn(consulta);
+
+        ConsultaDto resultado = consultaService.obtenerConsultaPorId(1L);
+
+        assertNotNull(resultado);
+        assertEquals(1L, resultado.getId());
+
+        verify(verificarService, times(1)).verificarConsulta(1L);
+        verify(consultaMapper, times(1)).toDto(consulta);
     }
 
     @Test
@@ -123,7 +159,7 @@ public class ConsultaServiceImplTest {
 
     @Test
     @DisplayName("Debe eliminar una consulta correctamente")
-    void testDeleteConsulta(){
+    void testEliminarConsulta(){
         Consulta consulta = crearConsultaMock();
 
         when(verificarService.verificarConsulta(1L)).thenReturn(consulta);

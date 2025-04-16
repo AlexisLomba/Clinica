@@ -5,7 +5,6 @@ import com.clinica.mapper.IAntecedenteMapper;
 import com.clinica.model.Antecedente;
 import com.clinica.model.Expediente;
 import com.clinica.repository.IAntecedenteRepository;
-import com.clinica.repository.IExpedienteRepository;
 import com.clinica.service.impl.AntecedenteServiceImpl;
 import com.clinica.service.impl.VerificarServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -23,7 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AntecedenteServiceImplTest {
+class AntecedenteServiceImplTest {
 
     @Mock
     private  IAntecedenteRepository antecedenteRepository;
@@ -37,31 +36,57 @@ public class AntecedenteServiceImplTest {
     @Mock
     private VerificarServiceImpl verificarService;
 
-    @Mock
-    private IExpedienteRepository expedienteRepository;
 
-    @Test
-    void testCrearAntecedente(){
+    LocalDateTime fecha = LocalDateTime.of(2025, 10 ,10 , 11, 11);
 
-        // No necesitas crear toda la cadena de objetos
-        Expediente expedienteMock = mock(Expediente.class);
+    Expediente expedienteMock = mock(Expediente.class);
 
-        LocalDateTime fecha = LocalDateTime.of(2025, 10 ,10 , 11, 11);
-        // Otras configuraciones necesarias
-        Antecedente antecedente = Antecedente.builder()
-                .id(1L)
-                .tipo(Antecedente.TipoAntecedente.FAMILIARES)
-                .descripcion("Dolor")
-                .expediente(expedienteMock)
-                .fechaRegistro(fecha)
-                .build();
-
+    AntecedenteDto crearAntecedenteDto(){
         AntecedenteDto antecedenteDto = new AntecedenteDto();
         antecedenteDto.setId(1L);
         antecedenteDto.setTipo("FAMILIARES");
         antecedenteDto.setDescripcion("Dolor");
         antecedenteDto.setFechaRegistro(fecha);
         antecedenteDto.setExpedienteId(1L);
+
+        return antecedenteDto;
+    }
+
+    Antecedente crearAntecedente(){
+        return Antecedente.builder()
+                .id(1L)
+                .tipo(Antecedente.TipoAntecedente.FAMILIARES)
+                .descripcion("Dolor")
+                .expediente(expedienteMock)
+                .fechaRegistro(fecha)
+                .build();
+    }
+
+    @Test
+    void testEncontrarTodos(){
+        Antecedente antecedente = crearAntecedente();
+        AntecedenteDto antecedenteDto = crearAntecedenteDto();
+
+        List<Antecedente> list = List.of(antecedente);
+
+        when(antecedenteRepository.findAll()).thenReturn(list);
+        when(antecedenteMapper.toDto(antecedente)).thenReturn(antecedenteDto);
+
+        List<AntecedenteDto> resultado = antecedenteService.encontrarTodos();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+
+        verify(antecedenteRepository, times(1)).findAll();
+        verify(antecedenteMapper, times(1)).toDto(antecedente);
+    }
+
+    @Test
+    void testCrearAntecedente(){
+
+        Antecedente antecedente = crearAntecedente();
+        AntecedenteDto antecedenteDto = crearAntecedenteDto();
+
 
         when(antecedenteMapper.toEntity(antecedenteDto)).thenReturn(antecedente);
         when(antecedenteMapper.toDto(antecedente)).thenReturn(antecedenteDto);
@@ -77,5 +102,19 @@ public class AntecedenteServiceImplTest {
         verify(antecedenteRepository, times(1)).save(any(Antecedente.class));
         verify(antecedenteRepository).save(antecedente);
 
+    }
+
+    @Test
+    void testBorrarAntecedente(){
+        Antecedente antecedente = crearAntecedente();
+
+        when(verificarService.verificarAntecedente(1L)).thenReturn(antecedente);
+
+        doNothing().when(antecedenteRepository).deleteById(1L);
+
+        antecedenteService.borrarAntecedente(1L);
+
+        verify(verificarService).verificarAntecedente(1L);
+        verify(antecedenteRepository).deleteById(1L);
     }
 }

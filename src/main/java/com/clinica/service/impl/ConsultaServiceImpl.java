@@ -14,62 +14,62 @@ import java.util.stream.Collectors;
 @Service
 public class ConsultaServiceImpl implements IConsultaService {
 
-    private final IConsultaRepository IConsultaRepository;
-    private final IConsultaMapper IConsultaMapper;
+    private final IConsultaRepository consultaRepository;
+    private final IConsultaMapper consultaMapper;
     private final IVerificarService verificarService;
 
-    public ConsultaServiceImpl(IConsultaRepository IConsultaRepository,
-                               IConsultaMapper IConsultaMapper,
+    public ConsultaServiceImpl(IConsultaRepository consultaRepository,
+                               IConsultaMapper consultaMapper,
                                IVerificarService verificarService) {
-        this.IConsultaRepository = IConsultaRepository;
-        this.IConsultaMapper = IConsultaMapper;
+        this.consultaRepository = consultaRepository;
+        this.consultaMapper = consultaMapper;
         this.verificarService = verificarService;
     }
 
     @Override
     public List<ConsultaDto> obtenerTodasLasConsultas() {
-        return IConsultaRepository.findAll().stream()
-                .map(IConsultaMapper::toDto)
+        return consultaRepository.findAll().stream()
+                .map(consultaMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public ConsultaDto obtenerConsultaPorId(Long id) {
-        return IConsultaMapper.toDto(verificarService.verificarConsulta(id));
+        return consultaMapper.toDto(verificarService.verificarConsulta(id));
     }
 
     @Override
     public ConsultaDto crearConsulta(ConsultaDto consultaDto) {
 
-        Consulta consulta = IConsultaMapper.toEntity(consultaDto);
+        Consulta consulta = consultaMapper.toEntity(consultaDto);
 
         consulta.setCita(verificarService.verificarCita(consultaDto.getCitaId()));
         consulta.setPaciente(verificarService.verificarPaciente(consultaDto.getPacienteId()));
         consulta.setDoctor(verificarService.verificarDoctor(consultaDto.getDoctorId()));
         consulta.setExpediente(verificarService.verificarExpediente(consultaDto.getExpedienteId()));
 
-        Consulta consultaGuardada = IConsultaRepository.save(consulta);
-        return IConsultaMapper.toDto(consultaGuardada);
+        Consulta consultaGuardada = consultaRepository.save(consulta);
+        return consultaMapper.toDto(consultaGuardada);
     }
 
     @Override
     public ConsultaDto actualizarConsulta(Long id, ConsultaDto consultaDto) {
         verificarService.verificarConsulta(id);
 
-        Consulta consulta = IConsultaMapper.toEntity(consultaDto);
+        Consulta consulta = consultaMapper.toEntity(consultaDto);
         consulta.setId(id);
         consulta.setCita(verificarService.verificarCita(consultaDto.getCitaId()));
         consulta.setPaciente(verificarService.verificarPaciente(consultaDto.getPacienteId()));
         consulta.setDoctor(verificarService.verificarDoctor(consultaDto.getDoctorId()));
         consulta.setExpediente(verificarService.verificarExpediente(consultaDto.getExpedienteId()));
 
-        Consulta consultaActualizada = IConsultaRepository.save(consulta);
-        return IConsultaMapper.toDto(consultaActualizada);
+        Consulta consultaActualizada = consultaRepository.save(consulta);
+        return consultaMapper.toDto(consultaActualizada);
     }
 
     @Override
     public void eliminarConsulta(Long id) {
         verificarService.verificarConsulta(id);
-        IConsultaRepository.deleteById(id);
+        consultaRepository.deleteById(id);
     }
 }
