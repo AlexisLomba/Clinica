@@ -1,7 +1,6 @@
 package com.clinica.service;
 
 
-import com.clinica.dto.RolDto;
 import com.clinica.dto.UsuarioDto;
 import com.clinica.mapper.IUsuarioMapper;
 import com.clinica.model.Rol;
@@ -9,20 +8,15 @@ import com.clinica.model.Usuario;
 import com.clinica.repository.IRolRepository;
 import com.clinica.repository.IUsuarioRepository;
 import com.clinica.service.impl.UsuarioServiceImpl;
-import com.clinica.service.impl.VerificarServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * * assertThrows -> validar Excepciones
  * */
 @ExtendWith(MockitoExtension.class)
-public class UsuarioServiceImplTest {
+class UsuarioServiceImplTest {
 
     @Mock
     private IUsuarioRepository usuarioRepository;
@@ -47,168 +41,260 @@ public class UsuarioServiceImplTest {
     private IUsuarioMapper usuarioMapper;
 
     @Mock
-    private VerificarServiceImpl verificarService;
+    private IVerificarService verificarService;
 
     @InjectMocks
     private UsuarioServiceImpl usuarioService;
 
-    @Test
-    void testCrearUsuario() {
-        // Simula el envio de datos como si fuera desde postman
-        UsuarioDto usuarioDto = new UsuarioDto();
-        usuarioDto.setId(1L);
-        usuarioDto.setNombre("Ivan");
-        usuarioDto.setApellido("Lomba");
-        usuarioDto.setEmail("ivan@gmail.com");
-        usuarioDto.setActivo(true);
-        usuarioDto.setPassword("1234");
-        usuarioDto.setUsername("vicarial");
-        usuarioDto.setUltimaModificacion(LocalDateTime.now());
-        usuarioDto.setFechaCreacion(LocalDateTime.now());
-        Set<String> roles = new HashSet<>();
-        roles.add("ADMIN");
-        usuarioDto.setRoles(roles);
-
-        // Simula la creacion de entidades, como se veria despues de guardarse en la base de datos
-        Rol rol = Rol.builder().id(1L).nombre("ADMIN").build();
-        Set<Rol> rolSet = new HashSet<>();
-        rolSet.add(rol);
-
-        Usuario usuario = Usuario.builder()
+    private Usuario crearUsuario() {
+        return Usuario.builder()
                 .id(1L)
-                .nombre("Ivan")
-                .apellido("Lomba")
-                .email("ivan@gmail.com")
+                .nombre("Juan")
+                .apellido("Pérez")
+                .email("juan@mail.com")
+                .username("juan123")
+                .password("pass123")
                 .activo(true)
-                .password("1234")
-                .username("vicarial")
                 .fechaCreacion(LocalDateTime.now())
                 .ultimaModificacion(LocalDateTime.now())
                 .roles(new HashSet<>())
                 .build();
+    }
 
-        // Incluye todos los campos del DTO mas los roles creados
-        Usuario usuarioConRoles = Usuario.builder()
-                .id(1L)
-                .nombre("Ivan")
-                .apellido("Lomba")
-                .email("ivan@gmail.com")
-                .activo(true)
-                .password("1234")
-                .username("vicarial")
-                .fechaCreacion(LocalDateTime.now())
-                .ultimaModificacion(LocalDateTime.now())
-                .roles(rolSet)
-                .build();
+    private UsuarioDto crearUsuarioDto() {
+        UsuarioDto dto = new UsuarioDto();
+        dto.setId(1L);
+        dto.setNombre("Juan");
+        dto.setApellido("Pérez");
+        dto.setEmail("juan@mail.com");
+        dto.setUsername("juan123");
+        dto.setPassword("pass123");
+        dto.setActivo(true);
+        dto.setRoles(Set.of("ADMIN"));
+        dto.setFechaCreacion(LocalDateTime.now());
+        dto.setUltimaModificacion(LocalDateTime.now());
+        return dto;
+    }
 
-        // Configuración de los mocks
-        when(usuarioMapper.toEntity(usuarioDto)).thenReturn(usuario);
-        when(rolRepository.findByNombre("ADMIN")).thenReturn(Optional.of(rol));
-        when(usuarioRepository.save(usuarioConRoles)).thenReturn(usuarioConRoles);
-        when(usuarioMapper.toDto(usuarioConRoles)).thenReturn(usuarioDto);
-
-        // Ejecución del método
-        UsuarioDto resultado = usuarioService.crearUsuario(usuarioDto);
-
-        // Verificaciones
-        assertNotNull(resultado);
-        assertEquals("1234", resultado.getPassword());
-        verify(usuarioRepository, times(1)).save(any(Usuario.class));
-        verify(rolRepository, times(1)).findByNombre("ADMIN");
+    private Rol crearRol() {
+        return Rol.builder().id(1L).nombre("ADMIN").build();
     }
 
     @Test
-    void testBuscarPorNombre() {
-        // Arrange
-        String nombre = "Ivan";
+    void testCrearUsuario() {
+        UsuarioDto usuarioDto = crearUsuarioDto();
+        Usuario usuario = crearUsuario();
+        Rol rol = crearRol();
 
-        // Creamos un usuario con builder donde se simula que se encontrara en la bse de datos
-        Usuario usuario = Usuario.builder()
-                .id(1L)
-                .nombre("Ivan")
-                .apellido("Lomba")
-                .email("ivan@gmail.com")
-                .activo(true)
-                .password("1234")
-                .username("vicarial")
-                .build();
-
-        UsuarioDto usuarioDto = new UsuarioDto();
-        usuarioDto.setId(1L);
-        usuarioDto.setNombre("Ivan");
-        usuarioDto.setApellido("Lomba");
-        usuarioDto.setEmail("ivan@gmail.com");
-        usuarioDto.setActivo(true);
-        usuarioDto.setUsername("vicarial");
-
-        // Mock behavior
-
-        // Cuando se llame a findByNombre devolvera un optional con el pobejto usuario,
-        // simulando el comportamneito del repositorio cuando busque por nombre
-        when(usuarioRepository.findByNombre(nombre)).thenReturn(Optional.of(usuario));
-
-        // simula la conversion de entidad a DTO
-        // le damos el usuario creado y espera que regrese el uduarioDto creado
+        when(usuarioMapper.toEntity(usuarioDto)).thenReturn(usuario);
+        when(rolRepository.findByNombre("ADMIN")).thenReturn(Optional.of(rol));
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
         when(usuarioMapper.toDto(usuario)).thenReturn(usuarioDto);
 
-        // Act
-        // Se ejecuta el metodo que estamos por testear
-        UsuarioDto resultado = usuarioService.buscarPorNombre(nombre);
+        UsuarioDto resultado = usuarioService.crearUsuario(usuarioDto);
 
-        // Assert
         assertNotNull(resultado);
-        assertEquals("Ivan", resultado.getNombre());
-        assertEquals("ivan@gmail.com", resultado.getEmail());
+        assertEquals("juan123", resultado.getUsername());
 
-        // Verify
-        // Verificamos que ambos metodos solo fueron llamados una vez
-        verify(usuarioRepository).findByNombre(nombre);
+        verify(usuarioMapper).toEntity(usuarioDto);
+        verify(rolRepository).findByNombre("ADMIN");
+        verify(usuarioRepository).save(any(Usuario.class));
         verify(usuarioMapper).toDto(usuario);
     }
 
     @Test
     void testActualizarUsuario() {
+        UsuarioDto usuarioDto = crearUsuarioDto();
+        usuarioDto.setNombre("Pedro");
+        usuarioDto.setRoles(Set.of("USER"));
 
-        // Creamos un usuario con builder donde se simula que se encontrara en la bse de datos
-        Usuario usuario = Usuario.builder()
-                .id(1L)
-                .nombre("Ivan")
-                .apellido("Lomba")
-                .email("ivan@gmail.com")
-                .activo(true)
-                .password("1234")
-                .username("vicarial")
-                .build();
+        Usuario usuario = crearUsuario();
+        Rol rol = Rol.builder().id(2L).nombre("USER").build();
 
-        UsuarioDto usuarioDto = new UsuarioDto();
-        usuarioDto.setId(1L);
-        usuarioDto.setNombre("Ale");
-        usuarioDto.setApellido("Lomba");
-        usuarioDto.setEmail("ivan@gmail.com");
-        usuarioDto.setActivo(true);
-        usuarioDto.setUsername("vicarial");
-
-        // Mock behavior
-
-        // simula la conversion de entidad a DTO
-        // le damos el usuario creado y espera que regrese el uduarioDto creado
+        when(verificarService.verificarUsuario(1L)).thenReturn(usuario);
+        when(rolRepository.findByNombre("USER")).thenReturn(Optional.of(rol));
         when(usuarioRepository.save(usuario)).thenReturn(usuario);
+        when(usuarioMapper.toDto(usuario)).thenReturn(usuarioDto);
+
+        UsuarioDto resultado = usuarioService.actualizarUsuario(usuarioDto, 1L);
+
+        assertNotNull(resultado);
+        assertEquals("Pedro", resultado.getNombre());
+
+        verify(verificarService).verificarUsuario(1L);
+        verify(rolRepository).findByNombre("USER");
+        verify(usuarioRepository).save(usuario);
+        verify(usuarioMapper).toDto(usuario);
+    }
+
+    @Test
+    void testEliminarUsuario() {
+        Usuario usuario = crearUsuario();
+
+        when(verificarService.verificarUsuario(1L)).thenReturn(usuario);
+        doNothing().when(usuarioRepository).deleteById(1L);
+
+        usuarioService.eliminarUsuario(1L);
+
+        verify(verificarService).verificarUsuario(1L);
+        verify(usuarioRepository).deleteById(1L);
+    }
+
+    @Test
+    void testBuscarPorNombre() {
+        Usuario usuario = crearUsuario();
+        UsuarioDto usuarioDto = crearUsuarioDto();
+
+        when(usuarioRepository.findByNombre("Juan")).thenReturn(Optional.of(usuario));
+        when(usuarioMapper.toDto(usuario)).thenReturn(usuarioDto);
+
+        UsuarioDto resultado = usuarioService.buscarPorNombre("Juan");
+
+        assertNotNull(resultado);
+        assertEquals("juan123", resultado.getUsername());
+
+        verify(usuarioRepository).findByNombre("Juan");
+        verify(usuarioMapper).toDto(usuario);
+    }
+
+    @Test
+    void testBuscarPorNombre_NotFound() {
+        when(usuarioRepository.findByNombre("NoExiste")).thenReturn(Optional.empty());
+
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+                () -> usuarioService.buscarPorNombre("NoExiste"));
+
+        assertEquals("No hay un usuario con el nombre: NoExiste", exception.getMessage());
+        verify(usuarioRepository).findByNombre("NoExiste");
+    }
+
+    @Test
+    void testFindAllUsuarios() {
+        Usuario usuario = crearUsuario();
+        UsuarioDto usuarioDto = crearUsuarioDto();
+
+        when(usuarioRepository.findAll()).thenReturn(List.of(usuario));
+        when(usuarioMapper.toDto(usuario)).thenReturn(usuarioDto);
+
+        List<UsuarioDto> resultado = usuarioService.findAllUsuarios();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+
+        verify(usuarioRepository).findAll();
+        verify(usuarioMapper).toDto(usuario);
+    }
+
+    @Test
+    void testFindById() {
+        Usuario usuario = crearUsuario();
+        UsuarioDto usuarioDto = crearUsuarioDto();
+
         when(verificarService.verificarUsuario(1L)).thenReturn(usuario);
         when(usuarioMapper.toDto(usuario)).thenReturn(usuarioDto);
 
-        // Act
-        // Se ejecuta el metodo que estamos por testear
-        UsuarioDto resultado = usuarioService.actualizarUsuario(usuarioDto, 1L);
+        UsuarioDto resultado = usuarioService.findById(1L);
 
-        // Assert
         assertNotNull(resultado);
-        assertEquals("Ale", resultado.getNombre());
-        assertEquals("ivan@gmail.com", resultado.getEmail());
+        assertEquals("juan123", resultado.getUsername());
 
-        // Verify
-        // Verificamos que ambos metodos solo fueron llamados una vez
+        verify(verificarService).verificarUsuario(1L);
         verify(usuarioMapper).toDto(usuario);
-        verify(usuarioRepository).save(usuario);
     }
+
+    @Test
+    void testCrearUsuarioFechaSeaNull() {
+        UsuarioDto usuarioDto = crearUsuarioDto();
+        Usuario usuario = crearUsuario();
+        usuario.setFechaCreacion(null);
+        LocalDateTime fecha = LocalDateTime.now();
+        usuario.setUltimaModificacion(null);
+        Rol rol = crearRol();
+
+        when(usuarioMapper.toEntity(usuarioDto)).thenReturn(usuario);
+        when(rolRepository.findByNombre("ADMIN")).thenReturn(Optional.of(rol));
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
+        when(usuarioMapper.toDto(usuario)).thenReturn(usuarioDto);
+
+        UsuarioDto resultado = usuarioService.crearUsuario(usuarioDto);
+
+        assertNotNull(resultado);
+        assertEquals("juan123", resultado.getUsername());
+        assertEquals(fecha.getMinute(), resultado.getFechaCreacion().getMinute());
+
+        verify(usuarioMapper).toEntity(usuarioDto);
+        verify(rolRepository).findByNombre("ADMIN");
+        verify(usuarioRepository).save(any(Usuario.class));
+        verify(usuarioMapper).toDto(usuario);
+    }
+
+    @Test
+    void testCrearUsuarioRolNoExiste() {
+        UsuarioDto usuarioDto = crearUsuarioDto();
+        usuarioDto.setRoles(Set.of("ADMI")); // Rol inexistente
+        Usuario usuario = crearUsuario();
+
+        when(usuarioMapper.toEntity(usuarioDto)).thenReturn(usuario);
+        when(rolRepository.findByNombre("ADMI"))
+                .thenReturn(Optional.empty()); // Simula que el rol no existe
+
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+                () -> usuarioService.crearUsuario(usuarioDto));
+
+        assertEquals("Rol no encontrado: ADMI", exception.getMessage());
+
+        verify(usuarioMapper).toEntity(usuarioDto);
+        verify(rolRepository).findByNombre("ADMI");
+        verify(usuarioRepository, never()).save(any());
+        verify(usuarioMapper, never()).toDto(any());
+    }
+
+
+    @Test
+    void testCrearUsuario_SinRolesDebeLanzarExcepcion() {
+        // Arrange
+        UsuarioDto usuarioDto = crearUsuarioDto();
+        usuarioDto.setRoles(null); // Simulamos que no tiene roles
+        Usuario usuario = crearUsuario();
+
+        when(usuarioMapper.toEntity(usuarioDto)).thenReturn(usuario);
+
+        // Act & Assert
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+                () -> usuarioService.crearUsuario(usuarioDto));
+
+        assertEquals("Deber tener al menos un rol", exception.getMessage());
+
+        verify(usuarioMapper).toEntity(usuarioDto);
+        verify(rolRepository, never()).findByNombre(any());
+        verify(usuarioRepository, never()).save(any());
+        verify(usuarioMapper, never()).toDto(any());
+    }
+    @Test
+    void testCrearUsuario_ListaRolesVaciaDebeLanzarExcepcion() {
+        // Arrange
+        UsuarioDto usuarioDto = crearUsuarioDto();
+        usuarioDto.setRoles(new HashSet<>()); // Set vacío
+        Usuario usuario = crearUsuario();
+
+        when(usuarioMapper.toEntity(usuarioDto)).thenReturn(usuario);
+
+        // Act & Assert
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+                () -> usuarioService.crearUsuario(usuarioDto));
+
+        assertEquals("Deber tener al menos un rol", exception.getMessage());
+
+        verify(usuarioMapper).toEntity(usuarioDto);
+        verify(rolRepository, never()).findByNombre(any());
+        verify(usuarioRepository, never()).save(any());
+        verify(usuarioMapper, never()).toDto(any());
+    }
+
+
+
+
+
 }
+
 

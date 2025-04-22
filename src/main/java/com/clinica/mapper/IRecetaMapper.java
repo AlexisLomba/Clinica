@@ -15,15 +15,9 @@ public interface IRecetaMapper {
     @Mapping(source = "consulta.id", target = "consultaId")
     RecetaDto toDto(Receta receta);
 
-    @Mapping(target = "consulta", ignore = true)
+    @Mapping(target = "consulta.id", source = "consultaId")
     Receta toEntity(RecetaDto recetaDto);
 
-    @AfterMapping
-    default void mapConsulta(@MappingTarget Receta receta, RecetaDto dto) {
-        if (dto.getConsultaId() != null) {
-            receta.setConsulta(Consulta.builder().id(dto.getConsultaId()).build());
-        }
-    }
 }
 
 

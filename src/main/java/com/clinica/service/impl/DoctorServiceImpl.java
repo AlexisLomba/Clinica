@@ -62,6 +62,8 @@ public class DoctorServiceImpl implements IDoctorService {
 
         if (doctorDto.getUsuarioId() != null) {
             doctorExistente.setUsuario(verificarService.verificarUsuario(doctorDto.getUsuarioId()));
+        }else {
+            throw new EntityNotFoundException("Asigan un usuario");
         }
 
         doctorExistente.setEspecialidad(doctorDto.getEspecialidad());

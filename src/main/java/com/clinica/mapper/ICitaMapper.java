@@ -9,7 +9,6 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface ICitaMapper {
@@ -27,7 +26,7 @@ public interface ICitaMapper {
     @Mapping(target = "paciente", ignore = true)
     @Mapping(target = "ultimaModificacion", ignore = true)
     void updateEntityFromDto(CitaDto dto, @MappingTarget Cita cita);
-    
+
     @AfterMapping
     default void mapEntities(@MappingTarget Cita cita, CitaDto dto) {
         if (dto.getPacienteId() != null) {
@@ -36,5 +35,5 @@ public interface ICitaMapper {
         if (dto.getDoctorId() != null) {
             cita.setDoctor(Doctor.builder().id(dto.getDoctorId()).build());
         }
-    } 
+    }
 }

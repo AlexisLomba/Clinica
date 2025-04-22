@@ -12,11 +12,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests unitarios para IAntecedenteMapper")
-public class AntecedenteMapperTest {
+class AntecedenteMapperTest {
 
     private final IAntecedenteMapper antecedenteMapper = Mappers.getMapper(IAntecedenteMapper.class);
 

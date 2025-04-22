@@ -51,6 +51,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
                 usuario.getRoles().add(rol);
             }
         }
+        else{
+            throw new EntityNotFoundException("Deber tener al menos un rol");
+        }
 
         if (usuario.getFechaCreacion() == null) {
             usuario.setFechaCreacion(LocalDateTime.now());
@@ -84,6 +87,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
                 roles.add(rol);
             }
             usuarioExistente.setRoles(roles);
+        }
+        else{
+            throw new EntityNotFoundException("Deber tener al menos un rol");
         }
 
         Usuario usuarioActualizado = IUsuarioRepository.save(usuarioExistente);

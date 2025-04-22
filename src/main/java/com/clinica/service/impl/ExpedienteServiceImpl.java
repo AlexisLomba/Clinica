@@ -15,61 +15,61 @@ import java.util.stream.Collectors;
 @Service
 public class ExpedienteServiceImpl implements IExpedienteService {
 
-    private final IExpedienteRepository IExpedienteRepository;
-    private final IExpedienteMapper IExpedienteMapper;
+    private final IExpedienteRepository expedienteRepository;
+    private final IExpedienteMapper expedienteMapper;
     private final IVerificarService verificarService;
 
-    public ExpedienteServiceImpl(IExpedienteRepository IExpedienteRepository,
-                                 IExpedienteMapper IExpedienteMapper,
+    public ExpedienteServiceImpl(IExpedienteRepository expedienteRepository,
+                                 IExpedienteMapper expedienteMapper,
                                  IVerificarService verificarService) {
-        this.IExpedienteRepository = IExpedienteRepository;
-        this.IExpedienteMapper = IExpedienteMapper;
+        this.expedienteRepository = expedienteRepository;
+        this.expedienteMapper = expedienteMapper;
         this.verificarService = verificarService;
     }
 
     @Override
     public ExpedienteDto crearExpediente(ExpedienteDto expedienteDto) {
 
-        Expediente expediente = IExpedienteMapper.toEntity(expedienteDto);
+        Expediente expediente = expedienteMapper.toEntity(expedienteDto);
 
         expediente.setPaciente(verificarService.verificarPaciente(expedienteDto.getPacienteId()));
         expediente.setFechaCreacion(LocalDateTime.now());
         expediente.setUltimaModificacion(LocalDateTime.now());
 
-        Expediente expedienteGuardado = IExpedienteRepository.save(expediente);
+        Expediente expedienteGuardado = expedienteRepository.save(expediente);
 
-        return IExpedienteMapper.toDto(expedienteGuardado);
+        return expedienteMapper.toDto(expedienteGuardado);
     }
 
     @Override
     public List<ExpedienteDto> findAllExpedientes() {
-        return IExpedienteRepository.findAll().stream()
-                .map(IExpedienteMapper::toDto)
+        return expedienteRepository.findAll().stream()
+                .map(expedienteMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public ExpedienteDto findById(Long id) {
         Expediente expediente = verificarService.verificarExpediente(id);
-        return IExpedienteMapper.toDto(expediente);
+        return expedienteMapper.toDto(expediente);
     }
 
     @Override
     public ExpedienteDto actualizarExpediente(Long id, ExpedienteDto expedienteDto) {
         verificarService.verificarExpediente(id);
 
-        Expediente expediente = IExpedienteMapper.toEntity(expedienteDto);
+        Expediente expediente = expedienteMapper.toEntity(expedienteDto);
         expediente.setId(id);
         expediente.setPaciente(verificarService.verificarPaciente(expedienteDto.getPacienteId()));
         expediente.setUltimaModificacion(LocalDateTime.now());
 
-        Expediente expedienteActualizado = IExpedienteRepository.save(expediente);
-        return IExpedienteMapper.toDto(expedienteActualizado);
+        Expediente expedienteActualizado = expedienteRepository.save(expediente);
+        return expedienteMapper.toDto(expedienteActualizado);
     }
 
     @Override
     public void eliminarExpediente(Long id) {
         verificarService.verificarExpediente(id);
-        IExpedienteRepository.deleteById(id);
+        expedienteRepository.deleteById(id);
     }
 }

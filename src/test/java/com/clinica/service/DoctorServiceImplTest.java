@@ -19,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -138,10 +137,12 @@ class DoctorServiceImplTest {
     void testBuscarPorNombreNoExiste(){
 
             String nombre = "Lomba";
-        when(doctorRepository.findByUsuario_Nombre(nombre)).thenThrow(new EntityNotFoundException());
+        when(doctorRepository.findByUsuario_Nombre(nombre)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> doctorService.buscarPorNombre(nombre))
-                .isInstanceOf(EntityNotFoundException.class);
+        EntityNotFoundException resultado = assertThrows(EntityNotFoundException.class,
+                () -> doctorService.buscarPorNombre(nombre));
+
+        assertEquals(resultado.getMessage(), "No hay un doctor con el nombre: " + nombre);
 
         verify(doctorRepository).findByUsuario_Nombre(nombre);
 
@@ -242,4 +243,26 @@ class DoctorServiceImplTest {
 
         verify(doctorRepository, never()).save(any());
     }
+
+    @Test
+    void testActualizarDoctor_UsuarioNull() {
+        // Arrange
+        DoctorDto doctorDto = crearDoctorDto();
+        doctorDto.setUsuarioId(null);
+        Doctor doctor = crearDoctor();
+
+        when(verificarService.verificarDoctor(ID_DOCTOR)).thenReturn(doctor);
+
+        // Act & Assert
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+            doctorService.actualizarDoctor(doctorDto, ID_DOCTOR);
+        });
+
+        assertEquals("Asigan un usuario", exception.getMessage());
+
+        verify(verificarService).verificarDoctor(ID_DOCTOR);
+        verify(verificarService, never()).verificarUsuario(any());
+        verify(doctorRepository, never()).save(any());
+    }
+
 }
